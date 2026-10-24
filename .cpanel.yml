@@ -1,0 +1,6 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/overnzbk/healthed.overseashighwaystudy.com/
+    - /bin/mkdir -p "$DEPLOYPATH"
+    - /bin/cp -R ./ "$DEPLOYPATH"
