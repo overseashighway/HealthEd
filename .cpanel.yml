@@ -3,4 +3,4 @@ deployment:
   tasks:
     - export DEPLOYPATH=/home/overnzbk/healthed.overseashighwaystudy.com/
     - /bin/mkdir -p "$DEPLOYPATH"
-    - /bin/cp -R ./ "$DEPLOYPATH"
+    - /bin/tar --exclude=.git --exclude=.cpanel.yml -cf - . | /bin/tar -xf - -C "$DEPLOYPATH"
