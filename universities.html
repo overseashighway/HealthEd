@@ -47,4 +47,6 @@ el('apply').onclick=()=>{const msg='Hello Overseas Highway HealthEd. Please asse
 el('modal').classList.add('show');
 }
 el('year').textContent=new Date().getFullYear();el('search').oninput=draw;el('discipline').onchange=draw;el('close').onclick=()=>el('modal').classList.remove('show');el('modal').onclick=e=>{if(e.target===el('modal'))el('modal').classList.remove('show')};document.addEventListener('keydown',e=>{if(e.key==='Escape')el('modal').classList.remove('show')});draw();
+const params=new URLSearchParams(location.search),selectedUniversity=params.get('university'),selectedProgram=params.get('program');
+if(selectedUniversity){const ui=universities.findIndex(x=>x.name.toLowerCase()===selectedUniversity.toLowerCase());if(ui>=0){openUniversity(ui);if(selectedProgram){let pi=universities[ui].programs.findIndex(n=>n.toLowerCase()===selectedProgram.toLowerCase());if(pi<0){pi=universities[ui].programs.findIndex(n=>n.toLowerCase().includes(selectedProgram.toLowerCase())||selectedProgram.toLowerCase().includes(n.toLowerCase()))}if(pi>=0)openProgram(ui,pi)}}}
 </script></body></html>
