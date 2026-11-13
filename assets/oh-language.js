@@ -98,18 +98,74 @@ const next=prefix+val+suffix;if(n.nodeValue!==next)n.nodeValue=next;
 }
 document.querySelectorAll('[data-oh-i18n]').forEach(el=>{let key=el.dataset.ohI18n;let v=map[key];if(v)el.textContent=v[i]});
 busy=false;}
-function langChange(lang){current=choices.some(x=>x[0]===lang)?lang:'en';try{localStorage.setItem('oh-healthed-lang',current)}catch(e){}paint();}
+const autoSources=new WeakMap();
+const autoCache=new Map();
+let translationVersion=0,engine=null,engineLanguage='',translationBusy=false,translationNeeded=false;
+function status(message){const el=document.querySelector('.oh-translate-status');if(el){el.textContent=message;el.title=message;}}
+function originalsForTranslation(){
+ const tw=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT),nodes=[];
+ while(tw.nextNode()){const n=tw.currentNode,p=n.parentElement;if(!p||p.closest('script,style,textarea,option,.oh-lang-control,[translate="no"],.oh-translate-status'))continue;
+ if(!autoSources.has(n))autoSources.set(n,originals.get(n)||n.nodeValue);
+ const original=autoSources.get(n),clean=original.trim();
+ if(clean.length<3||!/[a-z]/i.test(clean)||map[clean])continue;
+ nodes.push({node:n,original,clean});
+ }return nodes;
+}
+async function translateFullPage(){
+ const version=++translationVersion,language=current,items=originalsForTranslation();
+ if(language==='en'){
+  for(const item of items){if(item.node.isConnected&&item.node.nodeValue!==item.original)item.node.nodeValue=item.original;}
+  status('');return;
+ }
+ if(!('Translator' in window)||typeof Translator.create!=='function'){status('Full-page translation needs Chrome with the on-device Translator feature. Only built-in interface labels translated here.');return;}
+ if(translationBusy){translationNeeded=true;return;}
+ translationBusy=true;
+ try{
+  if(!engine||engineLanguage!==language){
+   status('Preparing '+language.toUpperCase()+' translation…');
+   const avail=await Translator.availability({sourceLanguage:'en',targetLanguage:language});
+   if(avail==='unavailable')throw new Error('This browser cannot translate to '+language+'.');
+   engine=await Translator.create({sourceLanguage:'en',targetLanguage:language});engineLanguage=language;
+  }
+  if(version!==translationVersion&&language!==current)return;
+  status('Translating full programme information…');
+  let done=0;
+  for(let offset=0;offset<items.length;offset+=4){
+   if(language!==current)break;
+   const batch=items.slice(offset,offset+4);
+   await Promise.all(batch.map(async item=>{
+    const cacheKey=language+'|'+item.clean;
+    let text=autoCache.get(cacheKey);
+    if(!text){try{text=await engine.translate(item.clean);autoCache.set(cacheKey,text);}catch(e){return;}}
+    if(language!==current||!item.node.isConnected)return;
+    const left=item.original.match(/^\s*/)?.[0]||'',right=item.original.match(/\s*$/)?.[0]||'';
+    item.node.nodeValue=left+text+right;
+   }));
+   done+=batch.length;
+   if(offset%40===0)status('Translating page… '+Math.min(done,items.length)+'/'+items.length);
+  }
+  if(language===current)status('Page translated to '+choices.find(x=>x[0]===language)[1]);
+ }catch(error){
+  engine=null;engineLanguage='';
+  status('Full-page translation unavailable in this browser. Please use latest Chrome with the translation language pack.');
+  console.info('HealthEd translation:',error);
+ }finally{
+  translationBusy=false;
+  if(translationNeeded){translationNeeded=false;translateFullPage();}
+ }
+}
+function langChange(lang){current=choices.some(x=>x[0]===lang)?lang:'en';try{localStorage.setItem('oh-healthed-lang',current)}catch(e){}paint();translateFullPage();}
 function install(){
-document.querySelectorAll('a.brand, a.logo, .nav .brand, .brand[href="index.html"]').forEach(a=>{if(a.querySelector('.oh-logo-mark'))return;a.innerHTML='<img class="oh-logo-mark" alt="Overseas Highway logo" src="assets/oh-mark.svg"><span class="oh-logo-copy">Overseas Highway <b>HealthEd</b></span>';a.setAttribute('aria-label','Overseas Highway HealthEd')});
+document.querySelectorAll('a.brand, a.logo, .nav .brand, .brand[href="index.html"]').forEach(a=>{if(a.querySelector('.oh-logo-mark'))return;a.innerHTML='<img class="oh-logo-mark oh-full-brand" alt="Overseas Highway logo" src="assets/oh-brand.svg"><span class="oh-logo-health">HealthEd</span>';a.setAttribute('aria-label','Overseas Highway HealthEd')});
 const header=document.querySelector('header');if(!header)return;
 const nav=header.querySelector('nav')||header.querySelector('.navlinks')||header.querySelector('.links');
 const target=header.querySelector('.nav-actions')||nav||header.querySelector('.container,.shell,.wrap');
 if(!target)return;
 const span=document.createElement('div');span.className='oh-lang-control';span.innerHTML='<span class="oh-lang-icon" aria-hidden="true">🌐</span><select class="oh-language" aria-label="Choose language">'+choices.map(([c,n])=>'<option value="'+c+'">'+n+'</option>').join('')+'</select>';
-target.appendChild(span);
+span.insertAdjacentHTML('beforeend','<small class="oh-translate-status" role="status" aria-live="polite"></small>');target.appendChild(span);
 span.querySelector('select').addEventListener('change',e=>langChange(e.target.value));
 try{current=localStorage.getItem('oh-healthed-lang')||'en'}catch(e){current='en'}
-paint();let pending=false;const observer=new MutationObserver(()=>{if(busy||pending)return;pending=true;requestAnimationFrame(()=>{pending=false;paint()})});
+paint();if(current!=='en')translateFullPage();let pending=false;const observer=new MutationObserver(()=>{if(busy||pending)return;pending=true;requestAnimationFrame(()=>{pending=false;paint();if(current!=='en')translateFullPage()})});
 observer.observe(document.body,{childList:true,subtree:true,characterData:false});
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
