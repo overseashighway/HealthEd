@@ -15,7 +15,7 @@
 @media(max-width:540px){.container{width:min(100% - 34px,1190px)}.section{padding:68px 0}.hero-grid{padding-top:45px}.hero h1{font-size:40px}.hero-copy{font-size:14px}.hero-points{gap:14px}.hero-art{min-height:365px}.hero-photo{inset:0 19px 30px 18px;width:calc(100% - 37px);height:calc(100% - 30px)}.hero-art:before{inset:0 5px 18px 4px}.float-card{padding:10px 12px;max-width:175px}.float-card b{font-size:11px}.float-card small{font-size:9px}.float-icon{width:31px;height:31px;font-size:17px}.float-one{top:45px}.float-two{bottom:34px}.grid3,.grid4{grid-template-columns:1fr}.section-top{align-items:start;flex-direction:column}.heading h2{font-size:33px}.dest-card img,.dest-card{height:250px;min-height:250px}.feature-image{height:290px}.cta{padding:28px 18px;border-radius:17px}.lead-form{padding:20px}.form-grid{grid-template-columns:1fr}.footer-grid{grid-template-columns:1fr 1fr;gap:25px}.footer-grid>div:first-child{grid-column:1/-1}.foot-bottom{flex-direction:column}.whatsapp{font-size:0;padding:12px 15px}.whatsapp span{font-size:19px}}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" referrerpolicy="no-referrer">
-</head>
+<link rel="stylesheet" href="assets/oh-language.css"></head>
 <body>
 <div class="topbar"><div class="container"><span>Empowering the next generation of healthcare professionals</span><span>Questions? WhatsApp <strong>+880 1332-843551</strong></span></div></div>
 <header><nav class="nav container" aria-label="Main navigation">
@@ -59,4 +59,4 @@ links.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{links.cla
 document.querySelectorAll('.faq-item button').forEach(btn=>btn.addEventListener('click',()=>{const item=btn.closest('.faq-item');const open=item.classList.toggle('open');btn.setAttribute('aria-expanded',String(open))}));
 document.getElementById('leadForm').addEventListener('submit',e=>{e.preventDefault();const d=new FormData(e.target);const text=['Hello Overseas Highway HealthEd, I would like a free consultation.','Name: '+d.get('name'),'WhatsApp: '+d.get('phone'),'Interested program: '+d.get('program'),'Preferred destination: '+(d.get('country')||'Not decided'),'Background / Questions: '+(d.get('message')||'Not provided')].join('\n');window.open('https://wa.me/8801332843551?text='+encodeURIComponent(text),'_blank','noopener,noreferrer')});
 </script>
-</body></html>
+<script src="assets/oh-language.js" defer></script></body></html>
